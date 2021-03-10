@@ -1,0 +1,4 @@
+{
+  "order_pizza":  "/api/pizza/order",
+  "userinfo":     "/api/userinfo"
+}
