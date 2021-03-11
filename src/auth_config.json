@@ -1,0 +1,6 @@
+{
+  "domain": "dev-iam138t.jp.auth0.com",
+  "clientId": "eZLdsbY5LcZodu0N1CBSMWjD9QG39NOb",
+  "audience": "http://localhost:3001/api/pizza",
+  "scope": "openid profile email update:order_pizza"
+}
