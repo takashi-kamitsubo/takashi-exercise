@@ -26,7 +26,7 @@ export const HistoryComponent = ({user}) => {
 
   return (<>
     <h1>History</h1>
-    {(meta.order_history || []).map((item, i) => {
+    {(meta.order_history || []).reverse().map((item, i) => {
       return (<div key={i} style={style}>
         <span style={dateStyle}>{new Date(item.date).toString()}</span>
         {Object.keys(item.pizza).map(function(k, j) {

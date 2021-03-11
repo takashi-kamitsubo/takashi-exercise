@@ -84,7 +84,7 @@ const addHistory = async (auth, pizza) => {
     return
   }
 
-  const userMetadata = userinfo["https://dev-iam138t:jp:auth0:com/user_metadata"] || {}
+  const userMetadata = userinfo["https://takashi-exercise.example.com/user_metadata"] || {}
   const history = userMetadata.order_history || []
   history.push({
     date: Date.now(),
