@@ -59,7 +59,7 @@ const App = () => {
     console.log(number)
 
     const token = await getAccessTokenSilently({
-      scope: 'update:users update:current_user_metadata'
+      scope: 'update:order_pizza'
     });
 
     console.log(JSON.stringify(orderData))
@@ -89,8 +89,10 @@ const App = () => {
             <Route path="/" exact>
               <Home orderHandler={onOrder} />
             </Route>
-            <Route path="/history" component={History} />
-            {/* <Route path="/external-api" component={ExternalApi} /> */}
+            {/* <Route path="/history" component={History} /> */}
+            <Route path="/history">
+              <History user={user} />
+            </Route>
           </Switch>
         </Container>
         <Footer />

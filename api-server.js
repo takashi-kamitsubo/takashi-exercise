@@ -4,6 +4,7 @@ const morgan = require("morgan");
 const helmet = require("helmet");
 const jwt = require("express-jwt");
 const jwksRsa = require("jwks-rsa");
+const request = require("request")
 const fetch = require("node-fetch")
 const authConfig = require("./src/auth_config.json");
 
@@ -43,10 +44,28 @@ const checkJwt = jwt({
     jwksUri: `https://${authConfig.domain}/.well-known/jwks.json`,
   }),
 
-  audience: authConfig.audience,
+  // audience: authConfig.audience,
   issuer: `https://${authConfig.domain}/`,
   algorithms: ["RS256"],
 });
+
+const getAccessToken = async () => {
+  var options = { method: 'POST',
+  url: 'https://dev-iam138t.jp.auth0.com/oauth/token',
+  headers: { 'content-type': 'application/json' },
+  body: '{"client_id":"LlfAXPxz0nyMqtXGlK5S7BSu8FRY6rz3","client_secret":"lzZNQmaonnxmbXHSmiROp0fdj8wli6Md71LACXn_IWkwhnrqR4R1lxDXdVN7NJ6C","audience":"https://dev-iam138t.jp.auth0.com/api/v2/","grant_type":"client_credentials"}' };
+
+  return new Promise(async (resolve, reject) => {
+    request(options, function (error, response, body) {
+      if (error) {
+        reject(error);
+        return
+      };
+  
+      resolve(JSON.parse(body))
+    });
+  })
+}
 
 const getUserinfo = async (auth) => {
   const res = await fetch("https://dev-iam138t.jp.auth0.com/userinfo", {
@@ -65,7 +84,6 @@ const addHistory = async (auth, pizza) => {
     return
   }
 
-  console.log(JSON.stringify(userinfo, null, 2))
   const userMetadata = userinfo["https://dev-iam138t:jp:auth0:com/user_metadata"] || {}
   const history = userMetadata.order_history || []
   history.push({
@@ -73,10 +91,12 @@ const addHistory = async (auth, pizza) => {
     pizza: pizza
   })
 
+  const token = await getAccessToken()
+  console.log(`token:${token}`)
   const res = await fetch(`https://dev-iam138t.jp.auth0.com/api/v2/users/${userinfo.sub}`, {
     method: "PATCH",
     headers: {
-      Authorization: auth,
+      Authorization: `Bearer ${token.access_token}`,
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
@@ -91,7 +111,20 @@ const addHistory = async (auth, pizza) => {
 }
 
 app.post("/api/pizza/order", checkJwt, async (req, res) => {
+  console.log(req.user)
+  console.log(req.user.scope)
+  if (!req.user.scope.split(" ").includes("update:order_pizza")) {
+    res.header("cache-control", "no-store")
+    res.status(403)
+    res.send({
+      msg: "Insufficient permissions"
+    })
+    return
+  }
+
+  console.log("[start] add history")
   await addHistory(req.headers.authorization, req.body)
+  console.log("[end] add history")
 
   res.header("cache-control", "no-store")
   res.send({
@@ -99,6 +132,7 @@ app.post("/api/pizza/order", checkJwt, async (req, res) => {
   })
 })
 app.get("/api/userinfo", checkJwt, async (req, res) => {
+  console.log(req.user)
   res.header("cache-control", "no-store")
   res.send(await getUserinfo(req.headers.authorization))
 })
